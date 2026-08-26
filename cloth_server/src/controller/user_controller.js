@@ -93,19 +93,37 @@ export const userController = {
      * PUT /api/update-profile
      */
     updateProfile: async (req, res) => {
-        try {
-            const userId = req.body.userId || req.headers['user-id'];
-            
-            if (!userId) {
-                return errorResponse(res, 'User ID is required', 400);
-            }
+    try {
+        const userId = req.body.userId || req.headers['user-id'];
 
-            const result = await UserService.updateProfile(userId, req.body);
-            return successResponse(res, result, 'Profile updated successfully');
-        } catch (error) {
-            return errorResponse(res, error.message, 400);
+        if (!userId) {
+            return errorResponse(res, 'User ID is required', 400);
         }
-    },
+
+        const updateData = {
+            ...req.body
+        };
+
+        if (req.file) {
+            updateData.profile_img = {
+                filename: req.file.filename,
+                path: req.file.path,
+                mimetype: req.file.mimetype
+            };
+        }
+
+        const result = await UserService.updateProfile(userId, updateData);
+
+        return successResponse(
+            res,
+            result,
+            'Profile updated successfully'
+        );
+
+    } catch (error) {
+        return errorResponse(res, error.message, 400);
+    }
+},
 
     /**
      * Update address
@@ -156,41 +174,73 @@ export const userController = {
      * POST /api/request-password-reset
      */
     requestPasswordReset: async (req, res) => {
-        try {
-            const { email } = req.body;
-            
-            if (!email) {
-                return errorResponse(res, 'Email is required', 400);
-            }
+    try {
+        const userId = req.user.userId;
 
-            const result = await UserService.requestPasswordReset(email);
-            return successResponse(res, result, 'Password reset OTP sent successfully');
-        } catch (error) {
-            if (error.message.includes('locked')) {
-                return errorResponse(res, error.message, 429);
-            }
-            return errorResponse(res, error.message, 400);
+        if (!userId) {
+            return errorResponse(res, 'Invalid token', 401);
         }
-    },
+
+        const result = await UserService.requestPasswordResetByUserId(userId);
+
+        return successResponse(
+            res,
+            result,
+            'Password reset OTP sent successfully'
+        );
+
+    } catch (error) {
+        if (error.message.includes('locked')) {
+            return errorResponse(res, error.message, 429);
+        }
+
+        return errorResponse(res, error.message, 400);
+    }
+},
+
 
     /**
      * Reset password - NO JWT TOKEN
      * POST /api/reset-password
      */
+      /**
+     * Reset password
+     * POST /api/reset-password
+     */
     resetPassword: async (req, res) => {
         try {
-            const { email, otp, new_password } = req.body;
-            
-            if (!email || !otp || !new_password) {
-                return errorResponse(res, 'Email, OTP, and new password are required', 400);
+            const { otp, new_password } = req.body;
+            const userId = req.user.userId;
+
+            if (!userId) {
+                return errorResponse(res, 'Invalid token', 401);
             }
 
-            const result = await UserService.resetPassword(email, otp, new_password);
-            return successResponse(res, result, 'Password reset successfully');
+            if (!otp || !new_password) {
+                return errorResponse(
+                    res,
+                    'OTP and new password are required',
+                    400
+                );
+            }
+
+            const result = await UserService.resetPassword(
+                userId,
+                otp,
+                new_password
+            );
+
+            return successResponse(
+                res,
+                result,
+                'Password reset successfully'
+            );
+
         } catch (error) {
             if (error.message.includes('locked')) {
                 return errorResponse(res, error.message, 429);
             }
+
             return errorResponse(res, error.message, 400);
         }
     }
