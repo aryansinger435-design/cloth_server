@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { router } from "./routes/routes.js";
+import router from "../src/routes/routes.js";
 
 dotenv.config({ quiet: true });
 
@@ -22,28 +22,45 @@ app.use(cors());
 
 // Rate limiter
 const limiter = rateLimit({
-  windowMs:  60 * 1000, // 15 minutes
-  max: 100, // 100 requests per IP
-  message: {
-    success: false,
-    message: "Too many requests, please try again later."
-  },
-  standardHeaders: true,
-  legacyHeaders: false
+    windowMs: 60 * 1000,
+    max: 100,
+    message: {
+        success: false,
+        message: "Too many requests, please try again later."
+    },
+    standardHeaders: true,
+    legacyHeaders: false
 });
 
 app.use(limiter);
 
 // MongoDB connection
 mongoose
-  .connect(process.env.mongodburl)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+    .connect(process.env.dburl)
+    .then(() => console.log("✅ MongoDB connected"))
+    .catch((err) => console.log("❌ MongoDB connection error:", err));
 
 // Routes
-app.use("/", router);
+app.use("/api", router);
+
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Route not found"
+    });
+});
+
+// Error Handler
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+});
 
 // Server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    console.log(`🚀 Server is running on port ${port}`);
 });

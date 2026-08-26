@@ -1,37 +1,57 @@
 import mongoose from "mongoose";
 
+const userSchema = new mongoose.Schema({
+    profile_img: { type: Object, default: null },
+    first_name: { type: String, required: true },
+    last_name: { type: String, required: true },
+    gender: { type: String, enum: ['male', 'female', 'other'], required: true },
+    role: { type: String, enum: ['admin', 'user'], required: true, default: 'user' },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
+    is_active: { type: Boolean, default: false },
+    is_deleted: { type: Boolean, default: false },
+    address_list: { type: Array, default: [] },
+    is_address_list: { type: Boolean, default: false },
+    verification: {
+        user: {
+            otp: { type: String, default: null },
+            is_verified: { type: Boolean, default: false },
+            otp_expiry: { type: Date, default: null },
+            otp_attempts: { type: Number, default: 0 },
+            max_otp_attempts: { type: Number, default: 3 },
+            is_locked: { type: Boolean, default: false },
+            lock_until: { type: Date, default: null },
+            lock_count: { type: Number, default: 0 },
+            lock_durations: {
+                type: [Number],
+                default: [1, 5, 10, 30, 60]
+            },
+            current_lock_index: { type: Number, default: 0 }
+        },
+        admin: {}
+    },
+    order_list: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }],
+    cart_list: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Cart' }]
+}, {
+    timestamps: true
+});
 
-const userSchema  = new mongoose.Schema({
-    profile_img:{type:Object},
-    first_name: {type:String,required:true},
-      last_name: {type:String,required:true},
-        gender: {type:String,enum:['male','female','other'],required:true},
-         role: {type:String,enum:['admin','user'],required:true},
-         email: {type:String,required:true,unique:true},
-         password: {type:String,required:true},
-              is_active: {type:Boolean,required:true},
-                   is_deleted: {type:Boolean,required:true},
-                   address_list:{type:Array,required:true},
-                    is_address_list:{type:Boolean,required:true},
-                   verfication:{
-                    user:{
-                        otp:{type:String},
-                        is_verified:{type:Boolean},
-                        is_expired_time:{type:Number},
-                          is_expired_otp:{type:Boolean},
-                          otp_attempt:{type:Number,default:3},
-                          lock_time:{type:Number}
-                    },
-                    admin:{
+// Method to check if user is locked
+userSchema.methods.isLocked = function() {
+    if (!this.verification.user.is_locked) return false;
+    if (this.verification.user.lock_until && new Date() > this.verification.user.lock_until) {
+        this.verification.user.is_locked = false;
+        this.verification.user.lock_until = null;
+        return false;
+    }
+    return true;
+};
 
-                    }
+// Method to get remaining lock time in seconds
+userSchema.methods.getRemainingLockTime = function() {
+    if (!this.verification.user.is_locked || !this.verification.user.lock_until) return 0;
+    const remaining = (this.verification.user.lock_until - new Date()) / 1000;
+    return Math.max(0, Math.ceil(remaining));
+};
 
-                   },
-                   order_list:{type:mongoose.Schema.Types.ObjectId,ref:'order'},
-                    cart_list:{type:mongoose.Schema.Types.ObjectId,ref:'order'},
-},{
-    timestamps:true
-})
-
-
-export default mongoose.model('user',userSchema)
+export default mongoose.model('User', userSchema);
