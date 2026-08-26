@@ -7,7 +7,8 @@ class UserService {
      * Register a new user
      */
     static async registerUser(userData) {
-        const { email, password, first_name, last_name, gender } = userData;
+    const { email, password, first_name, last_name, gender, pincode } = userData;
+
 
         // Check if user exists
         const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -28,6 +29,7 @@ class UserService {
             first_name,
             last_name,
             gender,
+            pincode,
             email: email.toLowerCase(),
             password: hashedPassword,
             is_active: false,
