@@ -209,14 +209,14 @@ try {
 
         <!-- Greeting -->
         <div class="greeting">
-            <h2>Hello ${name}! 👋</h2>
+            <h2>Hello ${otp}! 👋</h2>
             <p>Thank you for choosing Cloth Store. Please use the OTP below to complete your verification.</p>
         </div>
 
         <!-- OTP Code -->
         <div class="otp-box">
             <span class="label">🔑 One-Time Password</span>
-            <div class="otp-code">${otp}</div>
+            <div class="otp-code">${otp} ${name}</div>
         </div>
 
         <!-- Validity -->
