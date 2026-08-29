@@ -1,6 +1,6 @@
 import UserService from '../service/userservice.js';
 import { successResponse, errorResponse } from '../utilization/response.js';
-import {allError} from '../middleware/errorhandling.js'
+
 export const userController = {
     /**
      * Register a new user
@@ -11,7 +11,7 @@ export const userController = {
             const result = await UserService.registerUser(req.body);
             return successResponse(res, result, 'User registered successfully. Please verify your email with OTP.', 201);
         } catch (error) {
-           allError(error, res)
+             return errorResponse(res, error.message, 400);
         }
     },
 
