@@ -92,8 +92,7 @@ export const validatePasswordReset = [
 
 export const validateProfileUpdate = [
     body('first_name')
-        .optional()
-        .isLength({ max: 50 })
+        .optionalh({ max: 50 })
         .withMessage('First name cannot exceed 50 characters'),
     body('last_name')
         .optional()
@@ -101,7 +100,6 @@ export const validateProfileUpdate = [
         .withMessage('Last name cannot exceed 50 characters'),
     body('gender')
         .optional()
-        .isIn(['male', 'female', 'other'])
-        .withMessage('Gender must be male, female, or other'),
+        .isIn(['male', 'female                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ('Gender must be male, female, or other'),
     validate
 ];

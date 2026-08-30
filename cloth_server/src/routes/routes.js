@@ -1,37 +1,98 @@
-import express from 'express';
-import userController from '../controller/user_controller.js';
-import {authMiddleware}from '../middleware/auth.js'
-import {
-    validateUserRegistration,
-    validateUserLogin,
-    validateOTP,
-    validateEmail,
-    validatePasswordReset,
-    validateProfileUpdate
-} from '../middleware/validation.js';
+import express from "express";
+import userController from "../controller/user_controller.js";
+import upload from "../upload/upload.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Public Routes - NO JWT REQUIRED
-router.post('/register', validateUserRegistration, userController.register);
-router.post('/verify-otp', validateOTP, userController.verifyOTP);
-router.post('/resend-otp', validateEmail, userController.resendOTP);
-router.post('/login', validateUserLogin, userController.login);
+
+// ================= REGISTER =================
+
 router.post(
-    '/request-password-reset',
+    "/register",
+    userController.register
+);
+
+
+// ================= VERIFY OTP =================
+
+router.post(
+    "/verify-otp",
+    userController.verifyOTP
+);
+
+
+// ================= RESEND OTP =================
+
+router.post(
+    "/resend-otp",
+    userController.resendOTP
+);
+
+
+// ================= LOGIN =================
+
+router.post(
+    "/login",
+    userController.login
+);
+
+
+// ================= UPDATE PROFILE =================
+
+router.put(
+    "/update-profile",
+
+    // Login required
+    authMiddleware,
+
+    // Profile image
+    upload.fields([
+        {
+            name: "profile_img",
+            maxCount: 1
+        }
+    ]),
+
+    userController.updateProfile
+);
+
+
+// ================= GET PROFILE =================
+
+router.get(
+    "/profile",
+    authMiddleware,
+    userController.getProfile
+);
+
+
+// ================= UPDATE ADDRESS =================
+
+router.put(
+    "/update-address",
+    authMiddleware,
+    userController.updateAddress
+);
+
+
+// ================= REQUEST PASSWORD RESET =================
+
+router.post(
+    "/request-password-reset",
     authMiddleware,
     userController.requestPasswordReset
 );
 
+
+// ================= RESET PASSWORD =================
+
 router.post(
-    '/reset-password',
+    "/reset-password",
     authMiddleware,
-    validatePasswordReset,
     userController.resetPassword
 );
-// Protected Routes (Use userId in body or header)
-router.get('/profile',authMiddleware, userController.getProfile);
-router.put('/update-profile',authMiddleware, validateProfileUpdate, userController.updateProfile);
-router.put('/update-address',authMiddleware, userController.updateAddress);
 
+
+export { router };
 export default router;
